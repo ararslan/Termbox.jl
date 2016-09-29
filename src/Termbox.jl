@@ -76,11 +76,14 @@ type Cell
                   bgoptions::Vector{Symbol}=Symbol[])
         fg = CellAttributes(color=fgcolor, options=fgoptions).attrs
         bg = CellAttributes(color=bgcolor, options=bgoptions).attrs
-        new(UInt32(c), fg, bg)
+        return new(UInt32(c), fg, bg)
     end
 
-    Cell{T<:CellAttributes}(c::Char; foreground::T, background::T) =
-        new(c, foreground, background)
+    function Cell{T<:CellAttributes}(c::Char;
+                                     foreground::T=T(color=:default),
+                                     background::T=T(color=:default))
+        return new(UInt32(c), foreground.attrs, background.attrs)
+    end
 end
 
 type Event
