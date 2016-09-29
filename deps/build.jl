@@ -23,7 +23,7 @@ provides(BuildProcess, (@build_steps begin
     GetSources(libtermbox)
     @build_steps begin
         ChangeDirectory(joinpath(srcdir(libtermbox), "libtermbox-$vers"))
-        FileRule(joinpath(libdir(libtermbox), "libtermbox" * BinDeps.shlib_ext), @build_steps begin
+        FileRule(joinpath(libdir(libtermbox), "libtermbox." * BinDeps.shlib_ext), @build_steps begin
             CreateDirectory(libdir(libtermbox))
             `./waf configure --prefix=`
             `./waf --targets=termbox_shared`
