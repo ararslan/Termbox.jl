@@ -14,7 +14,7 @@ end
 
 ### Types and exceptions
 
-immutable TermboxException <: Exception
+struct TermboxException <: Exception
     code::Integer
     msg::String
 
@@ -35,7 +35,7 @@ end
 Base.showerror(io::IO, ex::TermboxException) =
     Base.print(io, "Unable to initialize Termbox: ", ex.msg, ", code ", ex.code)
 
-type CellAttributes
+mutable struct CellAttributes
     attrs::UInt16
 
     function CellAttributes(; color::Symbol=:default, options::Vector{Symbol}=Symbol[])
@@ -64,7 +64,7 @@ type CellAttributes
     end
 end
 
-type Cell
+mutable struct Cell
     char::UInt32
     foreground::UInt16
     background::UInt16
@@ -79,14 +79,14 @@ type Cell
         return new(UInt32(c), fg, bg)
     end
 
-    function Cell{T<:CellAttributes}(c::Char;
-                                     foreground::T=T(color=:default),
-                                     background::T=T(color=:default))
+    function Cell(c::Char;
+                  foreground::T=T(color=:default),
+                  background::T=T(color=:default)) where T<:CellAttributes
         return new(UInt32(c), foreground.attrs, background.attrs)
     end
 end
 
-type Event
+mutable struct Event
     event::UInt8
     modifier::UInt8
     key::UInt16
@@ -159,7 +159,7 @@ end
 Set the cell attributes to be applied when `clear!()` is called. Both fields must be
 `CellAttributes`s.
 """
-function set_clear_attributes!{T<:CellAttributes}(fg::T, bg::T)
+function set_clear_attributes!(fg::T, bg::T) where T<:CellAttributes
     return ccall((:tb_set_clear_attributes, libtermbox), Void,
                  (UInt16, UInt16), fg.attrs, bg.attrs)
 end
@@ -179,7 +179,7 @@ end
 Set the cursor's position to `(x, y)`. `(0, 0)` corresponds to the character in the upper
 left corner of the terminal window. Both coordinates must be nonnegative integers.
 """
-function setcursor!{T<:Signed}(x::T, y::T)
+function setcursor!(x::T, y::T) where T<:Signed
     (x >= 0 && y >= 0) || throw(ArgumentError("cursor coordinates must be nonnegative"))
     return ccall((:tb_set_cursor, libtermbox), Void, (Cint, Cint), Int32(x), Int32(y))
 end
@@ -199,7 +199,7 @@ end
 Modify the cell at `(x, y)` to contain `char` with the given `foreground` and
 `background`, passed as `CellAttributes`.
 """
-function changecell!{S<:Signed, T<:CellAttributes}(x::S, y::S, char::Char, fg::T, bg::T)
+function changecell!(x::S, y::S, char::Char, fg::T, bg::T) where {S<:Signed, T<:CellAttributes}
     return ccall((:tb_change_cell, libtermbox), Void,
                  (Cint, Cint, UInt32, UInt16, UInt16),
                  Int32(x), Int32(y), UInt32(char), fg.attrs, bg.attrs)
@@ -210,7 +210,7 @@ end
 
 Modify the cell at `(x, y)` to contain the `Cell` object `cell`.
 """
-function putcell!{T<:Signed}(x::T, y::T, cell::Cell)
+function putcell!(x::T, y::T, cell::Cell) where T<:Signed
     return changecell!(Int32(x), Int32(y), cell.char, cell.foreground, cell.background)
 end
 
